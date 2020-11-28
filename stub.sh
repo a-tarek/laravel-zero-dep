@@ -23,13 +23,11 @@ build() {
 }
 
 up() {
-    for container in db app phpmyadmin; do
-        docker-compose up -d $container
-    done
-}
-
-test() {
-    
+    docker-compose up -d app
+    docker-compose up -d mysql
+    docker-compose up -d phpmyadmin
+    docker-compose up -d mongo
+    docker-compose up -d mongo-express
 }
 
 down() {

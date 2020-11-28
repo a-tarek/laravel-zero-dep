@@ -1,7 +1,12 @@
-version: '3.4'
+version: '3.5'
+
+networks: 
+  network:
+    name: ${APP_ALIAS}-network
+    driver: bridge
 
 services: 
-  db:
+  mysql:
     image: mysql:8.0.22
     env_file:
       - .env
@@ -15,10 +20,10 @@ services:
     ports:
       - '8070:3306'
     restart: always
-    container_name: 'db'
+    container_name: ${APP_ALIAS}-mysql
     restart: always
     networks:
-      - e-network
+      - network
   
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
@@ -26,13 +31,43 @@ services:
       - .env
     environment: 
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      PMA_HOST: mysql
     ports: 
       - '8080:80'
     depends_on: 
-      - db
-    container_name: phpmyadmin
+      - mysql
+    container_name: ${APP_ALIAS}-phpmyadmin
     networks: 
-      - e-network
+      - network
+  
+  mongo:
+    image: mongo
+    container_name: ${APP_ALIAS}-mongo-db
+    ports: 
+      - '8071:27017'
+    volumes: 
+      - 'mongo-db:/data/db'
+    networks:
+      - network
+  
+  mongo-express:
+    image: mongo-express
+    container_name: ${APP_ALIAS}-mongo-express
+    depends_on: 
+      - mongo
+    env_file: 
+      - .env
+    environment: 
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_BASICAUTH_USERNAME: ${ME_CONFIG_BASICAUTH_USERNAME}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${ME_CONFIG_BASICAUTH_PASSWORD}
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${ME_CONFIG_MONGODB_ADMINUSERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${ME_CONFIG_MONGODB_ADMINPASSWORD}
+    ports: 
+      - '8081:8081'
+    networks:
+      - network
 
   app:
     build: 
@@ -46,14 +81,12 @@ services:
       - '8000:80'
     volumes:
       - '.:/var/www/html'
-    container_name: ${APP_CONTAINER_NAME}
+    container_name: ${APP_ALIAS}
     tty: true
     networks:
-      - e-network
+      - network
 
 volumes:
   db:
+  mongo-db:
 
-networks: 
-  e-network:
-    driver: bridge
