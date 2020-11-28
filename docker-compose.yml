@@ -1,0 +1,59 @@
+version: '3.4'
+
+services: 
+  db:
+    image: mysql:8.0.22
+    env_file:
+      - .env
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - 'db:/var/lib/mysql'
+    ports:
+      - '8070:3306'
+    restart: always
+    container_name: 'db'
+    restart: always
+    networks:
+      - e-network
+  
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    env_file:
+      - .env
+    environment: 
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports: 
+      - '8080:80'
+    depends_on: 
+      - db
+    container_name: phpmyadmin
+    networks: 
+      - e-network
+
+  app:
+    build: 
+      args: 
+        user: ${SYSTEM_USER}
+        uid: ${SYSTEM_USER_ID}
+      context: .
+      dockerfile: ./Dockerfile
+    image: image
+    ports: 
+      - '8000:80'
+    volumes:
+      - '.:/var/www/html'
+    container_name: ${APP_CONTAINER_NAME}
+    tty: true
+    networks:
+      - e-network
+
+volumes:
+  db:
+
+networks: 
+  e-network:
+    driver: bridge
