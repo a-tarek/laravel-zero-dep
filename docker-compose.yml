@@ -16,7 +16,7 @@ services:
       MYSQL_DATABASE: ${DB_DATABASE}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - 'db:/var/lib/mysql'
+      - 'mysql-db:/var/lib/mysql'
     ports:
       - '8070:3306'
     restart: always
@@ -69,6 +69,28 @@ services:
     networks:
       - network
 
+  redis:
+    image: redis
+    container_name: ${APP_ALIAS}-redis
+    volumes: 
+      - 'redis-db:/var/lib/redis'
+    ports: 
+      - '8072:6379'
+    networks: 
+      - network
+
+  redis-commander:
+    image: rediscommander/redis-commander
+    container_name: ${APP_ALIAS}-redis-commander
+    environment: 
+      - REDIS_HOSTS=redis
+    ports: 
+      - '8082:8081'
+    depends_on: 
+      - 'redis'
+    networks: 
+      - network
+  
   app:
     build: 
       args: 
@@ -87,6 +109,7 @@ services:
       - network
 
 volumes:
-  db:
+  mysql-db:
   mongo-db:
+  redis-db:
 

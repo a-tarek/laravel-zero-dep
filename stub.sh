@@ -28,6 +28,8 @@ up() {
     docker-compose up -d phpmyadmin
     docker-compose up -d mongo
     docker-compose up -d mongo-express
+    docker-compose up -d redis
+    docker-compose up -d redis-commander
 }
 
 down() {
